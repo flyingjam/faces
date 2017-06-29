@@ -1,7 +1,7 @@
-import get_faces
 import os
 import cv2
 from subprocess import run
+import get_data.get_faces as get_faces
 
 def download_raw_dataset(tag, n_images = 1000, directory = "data/raw", download_url="https://danbooru.donmai.us/posts?tags={}"):
     arg_images = ["--images", "-{}".format(n_images)]
