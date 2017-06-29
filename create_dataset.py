@@ -10,7 +10,7 @@ site_url_dict = {
 def download_dataset(tag, n_images, download_url, out_dir, site_name):
     download_raw_dataset(tag, n_images, download_url=download_url)
     in_dir = os.path.join("data/raw/", site_name)
-    out_dir = os.path.join("data", site_name, out_dir)
+    out_dir = os.path.join("data", out_dir, site_name)
     print(out_dir)
     convert_to_faces(tag, in_directory=in_dir, out_directory=out_dir)
 
