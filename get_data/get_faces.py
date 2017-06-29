@@ -3,7 +3,7 @@ import os
 
 cascade_file = "../get_data/lbpcascade_animeface.xml"
 
-def detect_face(image, classifier=None):
+def detect_face(image, classifier=None, scaleFactor = 1.2, minNeighbors = 1, minSize = (24,24)):
 
     if classifier == None:
         if not os.path.isfile(cascade_file):
@@ -13,11 +13,15 @@ def detect_face(image, classifier=None):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     image = cv2.equalizeHist(image)
 
-    return classifier.detectMultiScale(image, scaleFactor = 1.1, minNeighbors = 5, minSize = (24,24))
+    return classifier.detectMultiScale(image,
+                                       scaleFactor = scaleFactor,
+                                       minNeighbors = minNeighbors,
+                                       minSize = minSize)
 
-def crop_image(image, face_coords):
+def crop_image(image, face_coords, size=(32,32), interpolation = cv2.INTER_AREA):
     x, y, w, h = face_coords
 
     face = image[y:(y+h), x:(x+w)]
-    return face
+    resized_face = cv2.resize(face, size, interpolation=interpolation)
+    return resized_face
 
