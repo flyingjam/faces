@@ -7,10 +7,14 @@ site_url_dict = {
     'danbooru' : 'https://danbooru.donmai.us/posts?tags={}'
 }
 
-def download_dataset(tag, n_images, download_url, out_dir, site_name):
+def download_dataset(tag, n_images, download_url, out_dir, site_name, is_out_dir):
     download_raw_dataset(tag, n_images, download_url=download_url)
     in_dir = os.path.join("data/raw/", site_name)
-    out_dir = os.path.join("data", out_dir, site_name)
+    out_dir = os.path.join("data", out_dir)
+
+    if is_out_dir:
+        out_dir = os.path.join(out_dir, site_name)
+
     print(out_dir)
     convert_to_faces(tag, in_directory=in_dir, out_directory=out_dir)
 
@@ -20,10 +24,11 @@ if __name__ == '__main__':
     parser.add_argument('-n', '--number', action='store', type=int, default="1000", help="Number of images to download")
     parser.add_argument("tag", action='store', help="Tag to search for")
     parser.add_argument('-d', '--dir', action='store', default="faces", help="Directory that processed faces are stored")
+    parser.add_argument('-sd', '--site_dir', action='store_true', help="Appends site name to the output dictory")
     args = parser.parse_args()
 
     if args.site not in site_url_dict.keys():
         raise RuntimeError("Site not supported!")
 
     site_url = site_url_dict[args.site]
-    download_dataset(args.tag, args.number, site_url, args.dir, args.site)
+    download_dataset(args.tag, args.number, site_url, args.dir, args.site, args.site_dir)
