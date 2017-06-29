@@ -1,7 +1,7 @@
 import cv2
 import os
 
-cascade_file = "../get_data/lbpcascade_animeface.xml"
+cascade_file = "./get_data/lbpcascade_animeface.xml"
 
 def detect_face(image, classifier=None, scaleFactor = 1.2, minNeighbors = 1, minSize = (24,24)):
 
@@ -17,6 +17,11 @@ def detect_face(image, classifier=None, scaleFactor = 1.2, minNeighbors = 1, min
                                        scaleFactor = scaleFactor,
                                        minNeighbors = minNeighbors,
                                        minSize = minSize)
+
+def create_classifier(path = cascade_file):
+    if not os.path.isfile(path):
+        raise RuntimeError("Cascade file not found")
+    return cv2.CascadeClassifier(path)
 
 def crop_image(image, face_coords, size=(32,32), interpolation = cv2.INTER_AREA):
     x, y, w, h = face_coords

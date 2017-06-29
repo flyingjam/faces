@@ -6,6 +6,8 @@
 *.png
 *.jpg
 *.jpeg
-
+.idea
 *.ipynb_checkpoints
 __pycache__
+
+data
