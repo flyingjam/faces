@@ -3,7 +3,7 @@ import os
 
 cascade_file = "./get_data/lbpcascade_animeface.xml"
 
-def detect_face(image, classifier=None, scaleFactor = 1.2, minNeighbors = 1, minSize = (24,24)):
+def detect_face(image, classifier=None, scaleFactor = 1.2, minNeighbors = 4, minSize = (24,24)):
 
     if classifier == None:
         if not os.path.isfile(cascade_file):

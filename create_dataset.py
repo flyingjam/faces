@@ -32,7 +32,7 @@ if __name__ == '__main__':
     parser.add_argument('tag', action='store', help="Tag to search for")
     parser.add_argument('-d', '--dir', action='store', default="faces", help="Directory that processed faces are stored")
     parser.add_argument('-sd', '--site_dir', action='store_true', help="Appends site name to the output dictory")
-    parser.add_argument('-po', '--process_only', actions='store_true', help="Only process images into faces")
+    parser.add_argument('-po', '--process_only', action='store_true', help="Only process images into faces")
     args = parser.parse_args()
 
     if args.process_only:
