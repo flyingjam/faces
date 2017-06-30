@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
+from networks import Network
 
 from utils import conv2dsize
 
@@ -113,4 +114,23 @@ class Decoder(nn.Module):
         return out
 
 
+default_params = {
+    'z_channel': 16,
+    'z_dim': 256,
+    'dropout': 0.5,
+    'kernal': 5,
+    'batch size': 200,
+    'epochs': 20
+}
+
+class VAENetwork(Network):
+
+    def __init__(self, hyper_params = default_params):
+        side_length =32
+        RGB = 3
+
+        self.params = hyper_params
+
+    def train_epoch(self, data):
+        pass
 
