@@ -118,7 +118,8 @@ class Decoder(nn.Module):
 default_params = {
     'z_channel': 16,
     'z_dim': 256,
-    'dropout': 0.5,
+    'encoder dropout': 0.5,
+    'decoder dropout': 0.3,
     'kernel': 5,
     'batch size': 200,
     'epochs': 20,
@@ -145,14 +146,14 @@ class VAENetwork(Network):
                                RGB,
                                self.params['z_channel'],
                                self.params['z_dim'],
-                               self.params['dropout'],
+                               self.params['encoder dropout'],
                                self.params['kernel'],
                                self.use_cuda)
         self.decoder =Decoder(side_length,
                               RGB,
                               self.params['z_channel'],
                               self.params['z_dim'],
-                              self.params['dropout'],
+                              self.params['decoder dropout'],
                               self.params['kernel'])
 
         parameters = list(self.encoder.parameters()) + list(self.decoder.parameters())
