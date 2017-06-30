@@ -3,11 +3,12 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from networks import Network
+from torch.utils.data import DataLoader
 
 from utils import conv2dsize
 
 class Encoder(nn.Module):
-    def __init__(self, side_length, n_channel, z_channel, z_dim, dropout = 0.5, kernal_size=5, use_cuda = False):
+    def __init__(self, side_length, n_channel, z_channel, z_dim, dropout = 0.5, kernel_size=5, use_cuda = False):
         super(Encoder, self).__init__()
 
         '''
@@ -25,35 +26,35 @@ class Encoder(nn.Module):
 
         self.out_dimension = side_length
         for i in range(3):
-            self.out_dimension = conv2dsize(self.out_dimension, kernal_size, stride=2)
+            self.out_dimension = conv2dsize(self.out_dimension, kernel_size, stride=2)
 
         '''
         Networks calculate mu and the log var in order to use the reparameterization trick
         '''
         self.mu = nn.Sequential(
-            nn.Conv2d(n_channel, z_channel, kernel_size=kernal_size, stride=2),
+            nn.Conv2d(n_channel, z_channel, kernel_size=kernel_size, stride=2),
             nn.BatchNorm2d(z_channel),
             nn.LeakyReLU(),
             nn.Dropout2d(p=dropout),
-            nn.Conv2d(z_channel, z_channel * 2, kernel_size=kernal_size, stride=2),
+            nn.Conv2d(z_channel, z_channel * 2, kernel_size=kernel_size, stride=2),
             nn.BatchNorm2d(z_channel * 2),
             nn.LeakyReLU(),
             nn.Dropout2d(p=dropout),
-            nn.Conv2d(z_channel * 2, z_channel * 4, kernel_size=kernal_size, stride=2),
+            nn.Conv2d(z_channel * 2, z_channel * 4, kernel_size=kernel_size, stride=2),
             nn.BatchNorm2d(z_channel * 4),
             nn.LeakyReLU()
         )
 
         self.var = nn.Sequential(
-            nn.Conv2d(n_channel, z_channel, kernel_size=kernal_size, stride=2),
+            nn.Conv2d(n_channel, z_channel, kernel_size=kernel_size, stride=2),
             nn.BatchNorm2d(z_channel),
             nn.LeakyReLU(),
             nn.Dropout2d(p=dropout),
-            nn.Conv2d(z_channel, z_channel * 2, kernel_size=kernal_size, stride=2),
+            nn.Conv2d(z_channel, z_channel * 2, kernel_size=kernel_size, stride=2),
             nn.BatchNorm2d(z_channel * 2),
             nn.LeakyReLU(),
             nn.Dropout2d(p=dropout),
-            nn.Conv2d(z_channel * 2, z_channel * 4, kernel_size=kernal_size, stride=2),
+            nn.Conv2d(z_channel * 2, z_channel * 4, kernel_size=kernel_size, stride=2),
             nn.BatchNorm2d(z_channel * 4),
             nn.LeakyReLU()
         )
@@ -84,7 +85,7 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
 
-    def __init__(self, side_length, n_channel, z_channel, z_dim, droppout = 0.5, kernal_size = 5):
+    def __init__(self, side_length, n_channel, z_channel, z_dim, droppout = 0.5, kernel_size = 5):
         super(Decoder, self).__init__()
 
         self.z_dim = z_dim
@@ -92,23 +93,21 @@ class Decoder(nn.Module):
         self.side_length = side_length
 
         self.convnet = nn.Sequential(
-            nn.ConvTranspose2d(z_dim, z_channel * 2, kernal_size, 2, output_padding=0),
+            nn.ConvTranspose2d(z_dim, z_channel * 2, kernel_size, 2, output_padding=0),
             nn.BatchNorm2d(z_channel * 2),
             nn.ReLU(),
             nn.Dropout2d(),
-            nn.ConvTranspose2d(z_channel * 2, z_channel, kernal_size, 2, output_padding=1),
+            nn.ConvTranspose2d(z_channel * 2, z_channel, kernel_size, 2, output_padding=1),
             nn.BatchNorm2d(z_channel),
             nn.ReLU(),
             nn.Dropout2d(),
-            nn.ConvTranspose2d(z_channel, n_channel, kernal_size, 2, output_padding=1),
+            nn.ConvTranspose2d(z_channel, n_channel, kernel_size, 2, output_padding=1),
             nn.Tanh()
         )
 
 
 
     def forward(self, X):
-        print(X.size(0))
-        print(self.z_dim)
         out = X.view(X.size(0), self.z_dim, 1, 1)
         out = self.convnet(out)
         return out
@@ -118,19 +117,74 @@ default_params = {
     'z_channel': 16,
     'z_dim': 256,
     'dropout': 0.5,
-    'kernal': 5,
+    'kernel': 5,
     'batch size': 200,
-    'epochs': 20
+    'epochs': 20,
+    'learning rate': 0.01
 }
 
 class VAENetwork(Network):
 
-    def __init__(self, hyper_params = default_params):
+    def __init__(self, dataset, hyper_params = {}, cuda=False):
         side_length =32
         RGB = 3
 
-        self.params = hyper_params
 
-    def train_epoch(self, data):
-        pass
+        self.use_cuda = cuda
+        self.params = default_params
+        self.params.update(hyper_params)
+
+        self.dataloader = DataLoader(dataset=dataset,
+                                     shuffle=True,
+                                     batch_size=self.params['batch size'],
+                                     drop_last=True)
+        print(self.params['batch size'])
+
+        self.encoder = Encoder(side_length,
+                               RGB,
+                               self.params['z_channel'],
+                               self.params['z_dim'],
+                               self.params['dropout'],
+                               self.params['kernel'],
+                               self.use_cuda)
+        self.decoder =Decoder(side_length,
+                              RGB,
+                              self.params['z_channel'],
+                              self.params['z_dim'],
+                              self.params['dropout'],
+                              self.params['kernel'])
+
+        parameters = list(self.encoder.parameters()) + list(self.decoder.parameters())
+        self.optimizer = torch.optim.Adam(parameters, self.params['learning rate'])
+
+        if self.use_cuda:
+            self.encoder.cuda()
+            self.decoder.cuda()
+
+    def train_epoch(self, epoch = 0):
+
+        self.encoder.train()
+        self.decoder.train()
+
+        for img, label in self.dataloader:
+            self.optimizer.zero_grad()
+
+            X = Variable(img)
+            if self.use_cuda:
+                X = X.cuda()
+
+            z_mu, z_var = self.encoder(X)
+            z = self.encoder.sample(self.params['batch size'], z_mu, z_var)
+
+            X_reconstructed = self.decoder(z)
+            reconstruction_loss = F.binary_cross_entropy(X_reconstructed, X, size_average=False)
+            KL = 0.5 * torch.sum(torch.exp(z_var) + z_mu**2 - 1.0 - z_var)
+            total_loss = reconstruction_loss + KL
+            total_loss.backward()
+
+            self.optimizer.step()
+
+
+
+
 
