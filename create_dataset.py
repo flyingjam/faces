@@ -28,7 +28,7 @@ def only_process(tag, out_dir, site_name, is_out_dir):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("Downloads anime pictures, then crops faces into a seperate directory.")
     parser.add_argument('-s', '--site', action='store', default = "danbooru", help="Name of the site to download from, ex. Danbooru")
-    parser.add_argument('-n', '--number', action='store', type=int, default="1000", help="Number of images to download")
+    parser.add_argument('-i', '--index', action='store', type=int, default="-1", help="Image range, i.e 1-5, or -5 to download the first 5 images")
     parser.add_argument('tag', action='store', help="Tag to search for")
     parser.add_argument('-d', '--dir', action='store', default="faces", help="Directory that processed faces are stored")
     parser.add_argument('-sd', '--site_dir', action='store_true', help="Appends site name to the output dictory")
@@ -42,4 +42,4 @@ if __name__ == '__main__':
             raise RuntimeError("Site not supported!")
 
         site_url = site_url_dict[args.site]
-        download_dataset(args.tag, args.number, site_url, args.dir, args.site, args.site_dir)
+        download_dataset(args.tag, args.index, site_url, args.dir, args.site, args.site_dir)
