@@ -9,5 +9,5 @@
 .idea
 *.ipynb_checkpoints
 __pycache__
-
+sample
 data
