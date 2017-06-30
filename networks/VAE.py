@@ -1,3 +1,4 @@
+import time
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -6,6 +7,7 @@ from networks import Network
 from torch.utils.data import DataLoader
 
 from utils import conv2dsize
+
 
 class Encoder(nn.Module):
     def __init__(self, side_length, n_channel, z_channel, z_dim, dropout = 0.5, kernel_size=5, use_cuda = False):
@@ -162,10 +164,13 @@ class VAENetwork(Network):
             self.decoder.cuda()
 
     def train_epoch(self, epoch = 0):
+        before_time = time.clock()
 
         self.encoder.train()
         self.decoder.train()
 
+        loss_sum = 0
+        total = 0
         for img, label in self.dataloader:
             self.optimizer.zero_grad()
 
@@ -182,7 +187,18 @@ class VAENetwork(Network):
             total_loss = reconstruction_loss + KL
             total_loss.backward()
 
+            loss_sum += total_loss.data[0]
+            total += 1
+
             self.optimizer.step()
+
+        if total == 0:
+            avg_loss = loss_sum
+        else:
+            avg_loss = loss_sum/total
+
+        duration = time.clock() - before_time
+        return duration, avg_loss
 
 
 
