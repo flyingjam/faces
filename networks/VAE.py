@@ -104,7 +104,7 @@ class Decoder(nn.Module):
             nn.ReLU(),
             nn.Dropout2d(),
             nn.ConvTranspose2d(z_channel, n_channel, kernel_size, 2, output_padding=1),
-            nn.Tanh()
+            nn.Sigmoid()
         )
 
 
@@ -140,7 +140,6 @@ class VAENetwork(Network):
                                      shuffle=True,
                                      batch_size=self.params['batch size'],
                                      drop_last=True)
-        print(self.params['batch size'])
 
         self.encoder = Encoder(side_length,
                                RGB,
@@ -164,10 +163,12 @@ class VAENetwork(Network):
             self.decoder.cuda()
 
     def train_epoch(self, epoch = 0):
+
+        TINY = 1e-15 #BCE is NaN with an input of 0
         before_time = time.clock()
 
         self.encoder.train()
-        self.decoder.train()
+        self.decoder.eval()
 
         loss_sum = 0
         total = 0
@@ -182,23 +183,17 @@ class VAENetwork(Network):
             z = self.encoder.sample(self.params['batch size'], z_mu, z_var)
 
             X_reconstructed = self.decoder(z)
-            reconstruction_loss = F.binary_cross_entropy(X_reconstructed, X, size_average=False)
-            KL = 0.5 * torch.sum(torch.exp(z_var) + z_mu**2 - 1.0 - z_var)
-            total_loss = reconstruction_loss + KL
+            reconstruction_loss = F.binary_cross_entropy(X_reconstructed + TINY, X + TINY, size_average=True)
+            KL_loss = z_mu.pow(2).add_(z_var.exp()).mul_(-1).add_(1).add_(z_var)
+            KL_loss = torch.sum(KL_loss).mul_(-0.5)
+            total_loss = reconstruction_loss + KL_loss
             total_loss.backward()
-
-            loss_sum += total_loss.data[0]
-            total += 1
-
             self.optimizer.step()
 
-        if total == 0:
-            avg_loss = loss_sum
-        else:
-            avg_loss = loss_sum/total
-
         duration = time.clock() - before_time
-        return duration, avg_loss
+
+        #TODO: Structured way to return training results
+        return duration, total_loss.data[0], X_reconstructed
 
 
 
