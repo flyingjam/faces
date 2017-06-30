@@ -6,12 +6,14 @@ from torch.autograd import Variable
 from utils import conv2dsize
 
 class Encoder(nn.Module):
-    def __init__(self, side_length, n_channel, z_channel, z_dim, dropout = 0.5, kernal_size=5):
+    def __init__(self, side_length, n_channel, z_channel, z_dim, dropout = 0.5, kernal_size=5, use_cuda = False):
         super(Encoder, self).__init__()
 
         self.n_channel = n_channel
         self.z_channel = z_channel
         self.z_dim = z_dim
+        self.use_cuda = use_cuda
+
 
         self.out_dimension = side_length
         for i in range(3):
@@ -60,6 +62,13 @@ class Encoder(nn.Module):
         var_out = self.var_out(var_out)
 
         return mu_out, var_out
+
+    def sample(self, batch_size, mu, var):
+        eps = Variable(torch.randn(batch_size, self.z_dim))
+        if self.use_cuda:
+            eps = eps.cuda()
+        return mu + torch.exp(var/2) * eps
+
 
 
 
