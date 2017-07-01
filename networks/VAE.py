@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
-from networks import Network
+from networks import Network, Result
 from torch.utils.data import DataLoader
 
 from utils import conv2dsize
@@ -193,8 +193,28 @@ class VAENetwork(Network):
 
         duration = time.clock() - before_time
 
+        def loss_reporting(loss):
+            return "Loss {}".format(loss.data[0])
+
+        report = Result(duration, total_loss, epoch, loss_reporting)
         #TODO: Structured way to return training results
-        return duration, total_loss.data[0], X_reconstructed
+        return report
+
+    def sample(self, img = None):
+        self.encoder.eval()
+        self.decoder.eval()
+
+        if img == None:
+            z = Variable(torch.FloatTensor(self.params['batch size'], self.params['z_dim']).normal_())
+            if self.use_cuda:
+                z = z.cuda()
+        else:
+            if self.use_cuda:
+                img = Variable(img.cuda())
+            z = self.encoder(img)
+
+        result = self.decoder(z)
+        return result.data.cpu()
 
 
 
