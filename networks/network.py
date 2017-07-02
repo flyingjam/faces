@@ -7,7 +7,15 @@ class Network(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def sample(self, img = None):
+    def sample(self, *img):
+        pass
+
+    @abstractmethod
+    def save(self, name):
+        pass
+
+    @abstractmethod
+    def load(self, name):
         pass
 
 class Result():
