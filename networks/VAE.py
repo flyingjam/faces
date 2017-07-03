@@ -1,7 +1,9 @@
 import time
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from torch.autograd import Variable
 from networks import Network, Result
 from torch.utils.data import DataLoader
@@ -137,6 +139,8 @@ class VAENetwork(Network):
         self.params = default_params
         self.params.update(hyper_params)
 
+        self.save_path = "saved_networks/VAE"
+
         self.dataloader = DataLoader(dataset=dataset,
                                      shuffle=True,
                                      batch_size=self.params['batch size'],
@@ -219,6 +223,34 @@ class VAENetwork(Network):
         result = self.decoder(z)
         return result.data.cpu()
 
+    def save(self, name):
+        path = os.path.join(self.save_path, name)
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        encoder_path = os.path.join(path, "encoder.net")
+        decoder_path = os.path.join(path, "decoder.net")
+        info_path = os.path.join(path, "info.txt")
+
+        torch.save(self.encoder.state_dict(), encoder_path)
+        torch.save(self.decoder.state_dict(), encoder_path)
+        with open(info_path, 'w') as f:
+            f.write("{}".format(self))
+
+    def load(self, name):
+        path = os.path.join(self.save_path, name)
+        if not os.path.exists(path):
+            raise RuntimeError("Saved network does not exist")
+
+        encoder_path = os.path.join(path, "encoder.net")
+        decoder_path = os.path.join(path, "decoder.net")
+
+        self.encoder.load_state_dict(torch.load(encoder_path))
+        self.decoder.load_state_dict(torch.load(decoder_path))
+
+
+    def __str__(self):
+        return "Params: \n {} \n Networks: \n {} \n {}".format(self.params, self.encoder, self.decoder)
 
 
 
