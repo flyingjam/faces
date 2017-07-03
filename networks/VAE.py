@@ -184,7 +184,7 @@ class VAENetwork(Network):
             z = self.encoder.sample(self.params['batch size'], z_mu, z_var)
 
             X_reconstructed = self.decoder(z)
-            reconstruction_loss = F.binary_cross_entropy(X_reconstructed + TINY, X + TINY, size_average=True)
+            reconstruction_loss = F.binary_cross_entropy(X_reconstructed + TINY, X + TINY, size_average=False)
             KL_loss = z_mu.pow(2).add_(z_var.exp()).mul_(-1).add_(1).add_(z_var)
             KL_loss = torch.sum(KL_loss).mul_(-0.5)
             total_loss = reconstruction_loss + KL_loss
@@ -200,21 +200,25 @@ class VAENetwork(Network):
         #TODO: Structured way to return training results
         return report
 
-    def sample(self, img = None):
+    def sample(self, *img):
         self.encoder.eval()
         self.decoder.eval()
 
-        if img == None:
+        if len(img) < 1:
             z = Variable(torch.FloatTensor(self.params['batch size'], self.params['z_dim']).normal_())
             if self.use_cuda:
                 z = z.cuda()
         else:
+            image = img[0]
             if self.use_cuda:
-                img = Variable(img.cuda())
-            z = self.encoder(img)
+                image = image.cuda()
+            image = Variable(image)
+            mu, var = self.encoder(image)
+            z = self.encoder.sample(image.size(0), mu, var)
 
         result = self.decoder(z)
         return result.data.cpu()
+
 
 
 
