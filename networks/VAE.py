@@ -12,7 +12,7 @@ from utils import conv2dsize
 
 
 class Encoder(nn.Module):
-    def __init__(self, side_length, n_channel, z_channel, z_dim, dropout = 0.5, kernel_size=5, use_cuda = False):
+    def __init__(self, side_length, n_channel, z_channel, z_dim, dropout = 0.5, use_cuda = False):
         super(Encoder, self).__init__()
 
         '''
@@ -26,6 +26,8 @@ class Encoder(nn.Module):
         self.z_channel = z_channel
         self.z_dim = z_dim
         self.use_cuda = use_cuda
+
+        kernel_size = 5
 
 
         self.out_dimension = side_length
@@ -89,12 +91,14 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
 
-    def __init__(self, side_length, n_channel, z_channel, z_dim, droppout = 0.5, kernel_size = 5):
+    def __init__(self, side_length, n_channel, z_channel, z_dim, droppout = 0.5):
         super(Decoder, self).__init__()
 
         self.z_dim = z_dim
         self.n_channel = n_channel
         self.side_length = side_length
+
+        kernel_size = 5
 
         self.convnet = nn.Sequential(
             nn.ConvTranspose2d(z_dim, z_channel * 2, kernel_size, 2, output_padding=0),
@@ -122,7 +126,6 @@ default_params = {
     'z_dim': 256,
     'encoder dropout': 0.5,
     'decoder dropout': 0.3,
-    'kernel': 5,
     'batch size': 200,
     'epochs': 20,
     'learning rate': 0.01
@@ -151,14 +154,12 @@ class VAENetwork(Network):
                                self.params['z_channel'],
                                self.params['z_dim'],
                                self.params['encoder dropout'],
-                               self.params['kernel'],
                                self.use_cuda)
         self.decoder =Decoder(side_length,
                               RGB,
                               self.params['z_channel'],
                               self.params['z_dim'],
-                              self.params['decoder dropout'],
-                              self.params['kernel'])
+                              self.params['decoder dropout'])
 
         parameters = list(self.encoder.parameters()) + list(self.decoder.parameters())
         self.optimizer = torch.optim.Adam(parameters, self.params['learning rate'])
