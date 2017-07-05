@@ -30,9 +30,9 @@ class Encoder(nn.Module):
         kernel_size = 4
 
 
-        self.out_dimension = side_length
+        self.out_dimension = conv2dsize(32, kernel_size, 2, 0)
         for i in range(3):
-            self.out_dimension = conv2dsize(self.out_dimension, kernel_size, stride=2)
+            self.out_dimension = conv2dsize(self.out_dimension, kernel_size, 2, 1)
 
         '''
         Networks calculate mu and the log var in order to use the reparameterization trick
