@@ -238,7 +238,7 @@ class VAENetwork(Network):
         info_path = os.path.join(path, "info.txt")
 
         torch.save(self.encoder.state_dict(), encoder_path)
-        torch.save(self.decoder.state_dict(), encoder_path)
+        torch.save(self.decoder.state_dict(), decoder_path)
         with open(info_path, 'w') as f:
             f.write("{}".format(self))
 
