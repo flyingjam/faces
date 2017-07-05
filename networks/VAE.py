@@ -101,15 +101,19 @@ class Decoder(nn.Module):
         kernel_size = 5
 
         self.convnet = nn.Sequential(
-            nn.ConvTranspose2d(z_dim, z_channel * 2, kernel_size, 2, output_padding=0),
+            nn.ConvTranspose2d(z_dim, z_channel * 4, kernel_size, 1, 0, bias=False),
+            nn.BatchNorm2d(z_channel * 4),
+            nn.ReLU(),
+            nn.Dropout2d(droppout),
+            nn.ConvTranspose2d(z_channel * 4, z_channel * 2, kernel_size, 2, 1, bias=False),
             nn.BatchNorm2d(z_channel * 2),
             nn.ReLU(),
-            nn.Dropout2d(),
-            nn.ConvTranspose2d(z_channel * 2, z_channel, kernel_size, 2, output_padding=1),
+            nn.Dropout2d(droppout),
+            nn.ConvTranspose2d(z_channel * 2, z_channel, kernel_size, 2, 1, bias=False),
             nn.BatchNorm2d(z_channel),
-            nn.ReLU(),
+            nn.ReLU(droppout),
             nn.Dropout2d(),
-            nn.ConvTranspose2d(z_channel, n_channel, kernel_size, 2, output_padding=1),
+            nn.ConvTranspose2d(z_channel, n_channel, kernel_size, 2, 1, bias=False),
             nn.Sigmoid()
         )
 
