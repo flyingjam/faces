@@ -27,7 +27,7 @@ class Encoder(nn.Module):
         self.z_dim = z_dim
         self.use_cuda = use_cuda
 
-        kernel_size = 5
+        kernel_size = 4
 
 
         self.out_dimension = side_length
@@ -38,34 +38,37 @@ class Encoder(nn.Module):
         Networks calculate mu and the log var in order to use the reparameterization trick
         '''
         self.mu = nn.Sequential(
-            nn.Conv2d(n_channel, z_channel, kernel_size=kernel_size, stride=2),
+            nn.Conv2d(n_channel, z_channel, kernel_size, 2, 0, bias=False),
             nn.BatchNorm2d(z_channel),
             nn.LeakyReLU(),
             nn.Dropout2d(p=dropout),
-            nn.Conv2d(z_channel, z_channel * 2, kernel_size=kernel_size, stride=2),
+            nn.Conv2d(z_channel, z_channel * 2, kernel_size, 2, 1, bias=False),
             nn.BatchNorm2d(z_channel * 2),
             nn.LeakyReLU(),
             nn.Dropout2d(p=dropout),
-            nn.Conv2d(z_channel * 2, z_channel * 4, kernel_size=kernel_size, stride=2),
+            nn.Conv2d(z_channel * 2, z_channel * 4, kernel_size, 2, 1, bias=False),
             nn.BatchNorm2d(z_channel * 4),
+            nn.LeakyReLU(),
+            nn.Conv2d(z_channel * 4, z_channel * 4, kernel_size, 2, 1, bias=False),
             nn.LeakyReLU()
         )
 
         self.var = nn.Sequential(
-            nn.Conv2d(n_channel, z_channel, kernel_size=kernel_size, stride=2),
+            nn.Conv2d(n_channel, z_channel, kernel_size, 2, 0, bias=False),
             nn.BatchNorm2d(z_channel),
             nn.LeakyReLU(),
             nn.Dropout2d(p=dropout),
-            nn.Conv2d(z_channel, z_channel * 2, kernel_size=kernel_size, stride=2),
+            nn.Conv2d(z_channel, z_channel * 2, kernel_size, 2, 1, bias=False),
             nn.BatchNorm2d(z_channel * 2),
             nn.LeakyReLU(),
             nn.Dropout2d(p=dropout),
-            nn.Conv2d(z_channel * 2, z_channel * 4, kernel_size=kernel_size, stride=2),
+            nn.Conv2d(z_channel * 2, z_channel * 4, kernel_size, 2, 1, bias=False),
             nn.BatchNorm2d(z_channel * 4),
+            nn.LeakyReLU(),
+            nn.Dropout2d(p=dropout),
+            nn.Conv2d(z_channel * 4, z_channel * 4, kernel_size, 2, 1, bias=False),
             nn.LeakyReLU()
         )
-
-
 
         self.mu_out = nn.Linear(z_channel * 4 * self.out_dimension, z_dim)
         self.var_out = nn.Linear(z_channel * 4 * self.out_dimension, z_dim)
@@ -98,21 +101,21 @@ class Decoder(nn.Module):
         self.n_channel = n_channel
         self.side_length = side_length
 
-        kernel_size = 5
+        kernel_size = 4
 
         self.convnet = nn.Sequential(
             nn.ConvTranspose2d(z_dim, z_channel * 4, kernel_size, 1, 0, bias=False),
             nn.BatchNorm2d(z_channel * 4),
             nn.ReLU(),
-            nn.Dropout2d(droppout),
+            nn.Dropout2d(p=droppout),
             nn.ConvTranspose2d(z_channel * 4, z_channel * 2, kernel_size, 2, 1, bias=False),
             nn.BatchNorm2d(z_channel * 2),
             nn.ReLU(),
-            nn.Dropout2d(droppout),
+            nn.Dropout2d(p=droppout),
             nn.ConvTranspose2d(z_channel * 2, z_channel, kernel_size, 2, 1, bias=False),
             nn.BatchNorm2d(z_channel),
-            nn.ReLU(droppout),
-            nn.Dropout2d(),
+            nn.ReLU(),
+            nn.Dropout2d(p=droppout),
             nn.ConvTranspose2d(z_channel, n_channel, kernel_size, 2, 1, bias=False),
             nn.Sigmoid()
         )
