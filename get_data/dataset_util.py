@@ -4,7 +4,7 @@ from subprocess import run
 import get_data.get_faces as get_faces
 
 def download_raw_dataset(tag, n_images = 1000, directory = "data/raw", download_url="https://danbooru.donmai.us/posts?tags={}"):
-    arg_images = ["--images", "-{}".format(n_images)]
+    arg_images = ["--images", "{}".format(n_images)]
     arg_url = [download_url.format(tag)]
     arg_directory = ["-d", "{}".format(directory)]
     args = ["gallery-dl"] + arg_images + arg_directory + arg_url
