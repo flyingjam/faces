@@ -1,5 +1,8 @@
 import cv2
 import os
+#note,
+#conda install -c conda-forge opencv=3.2.0 
+#for using conda on python 3.6
 
 cascade_file = "./get_data/lbpcascade_animeface.xml"
 
