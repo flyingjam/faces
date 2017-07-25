@@ -31,6 +31,11 @@ def combine(coord, z):
     out = torch.from_numpy(out).float()
     return out
 
+def create_latent(latent, batch, x_dim, y_dim, z_dim):
+    #latent vectors from encoder of shape [batch, z_dim]
+    z = np.repeat(latent, x_dim * y_dim, axis=1)
+    return z.reshape(1, batch * x_dim * y_dim, -1)
+
 class CPPN(nn.Module):
     def __init__(self, z_dim, n_channel, z_channel, dropout=0.5):
         super(CPPN, self).__init__()
