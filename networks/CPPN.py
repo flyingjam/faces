@@ -14,9 +14,9 @@ def coordinates(batch, x_dim = 32, y_dim = 32, scale = 1.0):
     x_mat = np.matmul(np.ones((y_dim, 1)), x_range.reshape((1, x_dim)))
     y_mat = np.matmul(y_range.reshape((y_dim, 1)), np.ones((1, x_dim)))
     r_mat = np.sqrt(x_mat*x_mat + y_mat*y_mat)
-    x_mat = np.tile(x_mat.flatten(), batch).reshape(batch, n_points, 1).astype(np.float32)
-    y_mat = np.tile(y_mat.flatten(), batch).reshape(batch, n_points, 1).astype(np.float32)
-    r_mat = np.tile(r_mat.flatten(), batch).reshape(batch, n_points, 1).astype(np.float32)
+    x_mat = np.tile(x_mat.flatten(), batch).reshape(1, batch * n_points, 1).astype(np.float32)
+    y_mat = np.tile(y_mat.flatten(), batch).reshape(1, batch * n_points, 1).astype(np.float32)
+    r_mat = np.tile(r_mat.flatten(), batch).reshape(1, batch * n_points, 1).astype(np.float32)
     return np.concatenate((x_mat, y_mat, r_mat), axis=2)
 
 class CPPN(nn.Module):
