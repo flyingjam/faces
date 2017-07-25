@@ -19,8 +19,19 @@ def coordinates(batch, x_dim = 32, y_dim = 32, scale = 1.0):
     r_mat = np.tile(r_mat.flatten(), batch).reshape(1, batch * n_points, 1).astype(np.float32)
     return np.concatenate((x_mat, y_mat, r_mat), axis=2)
 
-class CPPN(nn.Module):
+def combine(coord, z):
+    '''
+    Combines coordinates and latent vector into one input tensor, also converts it to a torch tensor
 
+    Coordinates have shape [1, batch * width * height, 3]
+    Latent vector should have shape [1, batch * width * height, z_dim]
+    '''
+
+    out = np.concatenate((coord, z), axis=2)
+    out = torch.from_numpy(out).float()
+    return out
+
+class CPPN(nn.Module):
     def __init__(self, z_dim, n_channel, z_channel, dropout=0.5):
         super(CPPN, self).__init__()
         self.z_dim = z_dim
