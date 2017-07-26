@@ -22,7 +22,7 @@ def coordinates(batch, x_dim = 32, y_dim = 32, scale = 1.0):
     x_mat = np.tile(x_mat.flatten(), batch).reshape(1, batch * n_points, 1).astype(np.float32)
     y_mat = np.tile(y_mat.flatten(), batch).reshape(1, batch * n_points, 1).astype(np.float32)
     r_mat = np.tile(r_mat.flatten(), batch).reshape(1, batch * n_points, 1).astype(np.float32)
-    return np.concatenate((x_mat, y_mat, r_mat), axis=2)
+    return torch.from_numpy(np.concatenate((x_mat, y_mat, r_mat), axis=2)).float()
 
 def combine(coord, z):
     '''
@@ -32,14 +32,13 @@ def combine(coord, z):
     Latent vector should have shape [1, batch * width * height, z_dim]
     '''
 
-    out = np.concatenate((coord, z), axis=2)
-    out = torch.from_numpy(out).float()
+    out = torch.cat((coord, z), 2)
     return out
 
 def create_latent(latent, batch, x_dim, y_dim):
     #latent vectors from encoder of shape [batch, z_dim]
-    z = np.repeat(latent, x_dim * y_dim, axis=1)
-    return z.reshape(1, batch * x_dim * y_dim, -1)
+    z = latent.repeat(x_dim * y_dim, 1)
+    return z.view(1, batch * x_dim * y_dim, -1)
 
 class CPPN(nn.Module):
     def __init__(self, z_dim, n_channel, z_channel, dropout=0.5):
@@ -140,14 +139,12 @@ class CPPNNetwork(Network):
 
             z_mu, z_var = self.encoder(X)
             z = self.encoder.sample(self.params['batch size'], z_mu, z_var)
-
-            if self.use_cuda:
-                z = z.cpu()
-            z = z.data.numpy()
-
             latent = create_latent(z, self.params['batch size'], self.width, self.height)
-            coords = coordinates(self.params['batch size'], self.width, self.height)
-            inp = Variable(combine(coords, latent))
+            coords = Variable(coordinates(self.params['batch size'], self.width, self.height))
+            if self.use_cuda:
+                coords = coords.cuda()
+
+            inp = combine(coords, latent)
 
             if self.use_cuda:
                 inp = inp.cuda()
@@ -160,6 +157,8 @@ class CPPNNetwork(Network):
             total_loss = reconstruction_loss + KL_loss
             total_loss.backward()
             self.optimizer.step()
+
+            return
 
         duration = time.clock() - before_time
 
